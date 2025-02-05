@@ -7,3 +7,5 @@ KiratiLingo is a mobile application developed in Swift to help preserve and prom
 * Swift – iOS development
 * SwiftUI / UIKit – UI design
 * Core Data / Firebase – Data storage
+## Installation 
+1. Clone the repository:

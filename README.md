@@ -9,3 +9,7 @@ KiratiLingo is a mobile application developed in Swift to help preserve and prom
 * Core Data / Firebase – Data storage
 ## Installation 
 1. Clone the repository:
+   ```
+   git clone https://github.com/dkgoat66/kiratilingo.git
+   cd kiratilingo
+   ```

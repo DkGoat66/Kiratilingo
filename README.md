@@ -14,4 +14,4 @@ KiratiLingo is a mobile application developed in Swift to help preserve and prom
    cd kiratilingo
    ```
 2. Open KiratiLingo.xcodeproj in Xcode
-3. 
+3. Select a simulator or connect a real device

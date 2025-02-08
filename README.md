@@ -3,7 +3,7 @@ KiratiLingo is a mobile application developed in Swift to help preserve and prom
 ## Features
 * Vocabulary Learning – Learn essential words and phrases with translations and audio pronunciations.
 * Interactive Quizzes – Test your knowledge with multiple-choice and fill-in-the-blank exercises
-* Daily word & Streak System
+* Daily word & Streak System- learn new word daily and keep up the streaks for continuous learning
 ## Technologies Used
 * Swift – iOS development
 * SwiftUI / UIKit – UI design

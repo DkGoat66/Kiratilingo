@@ -2,9 +2,9 @@
 KiratiLingo is a mobile application developed in Swift to help preserve and promote the Kirati language. This app provides an interactive platform for users to learn vocabulary, pronunciation, and cultural insights through structured lessons and quizzes.
 ## Features
 * Vocabulary Learning – Learn essential words and phrases with translations and audio pronunciations.
-* Interactive Quizzes – Test your knowledge with multiple-choice and fill-in-the-blank exercises.
+* Interactive Quizzes – reinforce learning with multiple-choice and fill-in-the-blank exercises.
 * Daily word & Streak System- learn new words daily and keep up the streaks for consistent learning.
-* Alphabet practices- practices writing Kirati alphabets with guided exercises.
+* Alphabet practices- practices writing Kirati alphabet with guided exercises.
 * Stories in Kiriti Language- Discover the origin of Kirat and other cultural narratives through immersive storytelling.
 ## Technologies Used
 * Swift – iOS development

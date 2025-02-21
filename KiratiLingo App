@@ -1,1 +1,82 @@
+import SwiftUI
+import Firebase
 
+@main
+struct KiratiLingoApp: App {
+    init() {
+        FirebaseApp.configure()
+    }
+    
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}
+
+struct ContentView: View {
+    var body: some View {
+        TabView {
+            VocabularyView()
+                .tabItem {
+                    Label("Vocabulary", systemImage: "book.fill")
+                }
+            PronunciationView()
+                .tabItem {
+                    Label("Pronunciation", systemImage: "waveform")
+                }
+            QuizView()
+                .tabItem {
+                    Label("Quiz", systemImage: "questionmark.circle.fill")
+                }
+            StoriesView()
+                .tabItem {
+                    Label("Stories", systemImage: "text.book.closed.fill")
+                }
+        }
+    }
+}
+
+struct VocabularyView: View {
+    var body: some View {
+        VStack {
+            Text("Vocabulary Learning")
+                .font(.title)
+                .padding()
+            Text("Learn essential words and phrases with translations and audio.")
+        }
+    }
+}
+
+struct PronunciationView: View {
+    var body: some View {
+        VStack {
+            Text("Pronunciation Practice")
+                .font(.title)
+                .padding()
+            Text("Practice authentic pronunciation of words.")
+        }
+    }
+}
+
+struct QuizView: View {
+    var body: some View {
+        VStack {
+            Text("Interactive Quizzes")
+                .font(.title)
+                .padding()
+            Text("Reinforce learning with multiple-choice and fill-in-the-blank exercises.")
+        }
+    }
+}
+
+struct StoriesView: View {
+    var body: some View {
+        VStack {
+            Text("Stories in Kirati Language")
+                .font(.title)
+                .padding()
+            Text("Discover the origin of Kirat and other cultural narratives.")
+        }
+    }
+}

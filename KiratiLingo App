@@ -1,82 +1,135 @@
 import SwiftUI
-import Firebase
+import AVFoundation
+
+struct ContentView: View {
+    @State private var selectedTab = 0
+    
+    var body: some View {
+        TabView(selection: $selectedTab) {
+            VocabularyView()
+                .tabItem {
+                    Image(systemName: "book.fill")
+                    Text("Vocabulary")
+                }
+                .tag(0)
+            
+            QuizView()
+                .tabItem {
+                    Image(systemName: "questionmark.circle.fill")
+                    Text("Quiz")
+                }
+                .tag(1)
+            
+            DailyWordView()
+                .tabItem {
+                    Image(systemName: "calendar")
+                    Text("Daily Word")
+                }
+                .tag(2)
+            
+            StoryView()
+                .tabItem {
+                    Image(systemName: "book.pages.fill")
+                    Text("Stories")
+                }
+                .tag(3)
+        }
+    }
+}
+
+// Vocabulary Learning View
+struct VocabularyView: View {
+    let words = ["Namaste" : "Hello", "Dhanyabad" : "Thank you"]
+    
+    var body: some View {
+        List(words.sorted(by: >), id: \.(key)) { key, value in
+            HStack {
+                Text("\(key)")
+                    .font(.title3)
+                    .fontWeight(.bold)
+                Spacer()
+                Text("\(value)")
+            }
+        }
+        .navigationTitle("Vocabulary")
+    }
+}
+
+// Quiz View
+struct QuizView: View {
+    @State private var answer = ""
+    let question = "What is 'Hello' in Kirati?"
+    let correctAnswer = "Namaste"
+    @State private var result = ""
+    
+    var body: some View {
+        VStack {
+            Text(question)
+                .font(.title)
+                .padding()
+            
+            TextField("Enter your answer", text: $answer)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .padding()
+            
+            Button("Submit") {
+                if answer.lowercased() == correctAnswer.lowercased() {
+                    result = "Correct!"
+                } else {
+                    result = "Try Again."
+                }
+            }
+            .padding()
+            
+            Text(result)
+                .foregroundColor(result == "Correct!" ? .green : .red)
+                .font(.headline)
+        }
+    }
+}
+
+// Daily Word & Streak System
+struct DailyWordView: View {
+    let dailyWord = "Sewa" // Example
+    let meaning = "Respect"
+    
+    var body: some View {
+        VStack {
+            Text("Word of the Day")
+                .font(.largeTitle)
+                .padding()
+            
+            Text(dailyWord)
+                .font(.title)
+                .fontWeight(.bold)
+                .padding()
+            
+            Text(meaning)
+                .font(.title2)
+                .foregroundColor(.gray)
+                .padding()
+        }
+    }
+}
+
+// Storytelling Section
+struct StoryView: View {
+    let story = "Long ago, the Kirat people settled in the beautiful hills of Nepal..."
+    
+    var body: some View {
+        ScrollView {
+            Text(story)
+                .padding()
+        }
+        .navigationTitle("Stories")
+    }
+}
 
 @main
 struct KiratiLingoApp: App {
-    init() {
-        FirebaseApp.configure()
-    }
-    
     var body: some Scene {
         WindowGroup {
             ContentView()
-        }
-    }
-}
-
-struct ContentView: View {
-    var body: some View {
-        TabView {
-            VocabularyView()
-                .tabItem {
-                    Label("Vocabulary", systemImage: "book.fill")
-                }
-            PronunciationView()
-                .tabItem {
-                    Label("Pronunciation", systemImage: "waveform")
-                }
-            QuizView()
-                .tabItem {
-                    Label("Quiz", systemImage: "questionmark.circle.fill")
-                }
-            StoriesView()
-                .tabItem {
-                    Label("Stories", systemImage: "text.book.closed.fill")
-                }
-        }
-    }
-}
-
-struct VocabularyView: View {
-    var body: some View {
-        VStack {
-            Text("Vocabulary Learning")
-                .font(.title)
-                .padding()
-            Text("Learn essential words and phrases with translations and audio.")
-        }
-    }
-}
-
-struct PronunciationView: View {
-    var body: some View {
-        VStack {
-            Text("Pronunciation Practice")
-                .font(.title)
-                .padding()
-            Text("Practice authentic pronunciation of words.")
-        }
-    }
-}
-
-struct QuizView: View {
-    var body: some View {
-        VStack {
-            Text("Interactive Quizzes")
-                .font(.title)
-                .padding()
-            Text("Reinforce learning with multiple-choice and fill-in-the-blank exercises.")
-        }
-    }
-}
-
-struct StoriesView: View {
-    var body: some View {
-        VStack {
-            Text("Stories in Kirati Language")
-                .font(.title)
-                .padding()
-            Text("Discover the origin of Kirat and other cultural narratives.")
         }
     }
 }

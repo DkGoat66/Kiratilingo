@@ -1,6 +1,7 @@
 import SwiftUI
 import AVFoundation
 
+// Main Content View with Tab Navigation
 struct ContentView: View {
     @State private var selectedTab = 0
     
@@ -13,115 +14,654 @@ struct ContentView: View {
                 }
                 .tag(0)
             
+            PronunciationView()
+                .tabItem {
+                    Image(systemName: "mic.fill")
+                    Text("Pronunciation")
+                }
+                .tag(1)
+            
+            AlphabetView()
+                .tabItem {
+                    Image(systemName: "pencil")
+                    Text("Alphabet")
+                }
+                .tag(2)
+            
             QuizView()
                 .tabItem {
                     Image(systemName: "questionmark.circle.fill")
                     Text("Quiz")
                 }
-                .tag(1)
+                .tag(3)
             
             DailyWordView()
                 .tabItem {
                     Image(systemName: "calendar")
                     Text("Daily Word")
                 }
-                .tag(2)
+                .tag(4)
             
             StoryView()
                 .tabItem {
                     Image(systemName: "book.pages.fill")
                     Text("Stories")
                 }
-                .tag(3)
+                .tag(5)
         }
     }
 }
 
-// Vocabulary Learning View
-struct VocabularyView: View {
-    let words = ["Namaste" : "Hello", "Dhanyabad" : "Thank you"]
+// Model for Vocabulary Words
+struct KiratiWord: Identifiable {
+    let id = UUID()
+    let kirati: String
+    let english: String
+    let audioFileName: String
+    let example: String
+}
+
+// Audio Player Service
+class AudioManager {
+    static let shared = AudioManager()
+    private var audioPlayer: AVAudioPlayer?
     
-    var body: some View {
-        List(words.sorted(by: >), id: \.(key)) { key, value in
-            HStack {
-                Text("\(key)")
-                    .font(.title3)
-                    .fontWeight(.bold)
-                Spacer()
-                Text("\(value)")
+    func playAudio(named fileName: String) {
+        guard let path = Bundle.main.path(forResource: fileName, ofType: "mp3") else {
+            print("Audio file not found")
+            return
+        }
+        
+        let url = URL(fileURLWithPath: path)
+        
+        do {
+            audioPlayer = try AVAudioPlayer(contentsOf: url)
+            audioPlayer?.prepareToPlay()
+            audioPlayer?.play()
+        } catch {
+            print("Could not play audio: \(error)")
+        }
+    }
+}
+
+// Enhanced Vocabulary Learning View
+struct VocabularyView: View {
+    let words = [
+        KiratiWord(kirati: "Namaste", english: "Hello", audioFileName: "namaste", example: "Namaste, how are you?"),
+        KiratiWord(kirati: "Dhanyabad", english: "Thank you", audioFileName: "dhanyabad", example: "Dhanyabad for your help."),
+        KiratiWord(kirati: "Sewa", english: "Respect", audioFileName: "sewa", example: "Show sewa to elders."),
+        KiratiWord(kirati: "Ningwa", english: "Mind/Heart", audioFileName: "ningwa", example: "Speak from your ningwa."),
+        KiratiWord(kirati: "Khim", english: "House", audioFileName: "khim", example: "This is my khim.")
+    ]
+    
+    @State private var searchText = ""
+    
+    var filteredWords: [KiratiWord] {
+        if searchText.isEmpty {
+            return words
+        } else {
+            return words.filter { 
+                $0.kirati.localizedCaseInsensitiveContains(searchText) || 
+                $0.english.localizedCaseInsensitiveContains(searchText)
             }
         }
-        .navigationTitle("Vocabulary")
+    }
+    
+    var body: some View {
+        NavigationView {
+            List(filteredWords) { word in
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text(word.kirati)
+                            .font(.title3)
+                            .fontWeight(.bold)
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            AudioManager.shared.playAudio(named: word.audioFileName)
+                        }) {
+                            Image(systemName: "speaker.wave.2.fill")
+                                .foregroundColor(.blue)
+                        }
+                    }
+                    
+                    Text(word.english)
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                    
+                    Text("Example: \(word.example)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.top, 2)
+                }
+                .padding(.vertical, 4)
+            }
+            .navigationTitle("Vocabulary")
+            .searchable(text: $searchText, prompt: "Search words")
+        }
     }
 }
 
-// Quiz View
-struct QuizView: View {
-    @State private var answer = ""
-    let question = "What is 'Hello' in Kirati?"
-    let correctAnswer = "Namaste"
-    @State private var result = ""
+// New Pronunciation Practice View
+struct PronunciationView: View {
+    let pronunciationExercises = [
+        KiratiWord(kirati: "Namaste", english: "Hello", audioFileName: "namaste", example: "Standard greeting"),
+        KiratiWord(kirati: "Dhanyabad", english: "Thank you", audioFileName: "dhanyabad", example: "Expressing gratitude"),
+        KiratiWord(kirati: "Tapai", english: "You (formal)", audioFileName: "tapai", example: "Respectful address")
+    ]
+    
+    @State private var selectedWord: KiratiWord?
+    @State private var isRecording = false
+    @State private var showingFeedback = false
     
     var body: some View {
-        VStack {
-            Text(question)
-                .font(.title)
-                .padding()
-            
-            TextField("Enter your answer", text: $answer)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .padding()
-            
-            Button("Submit") {
-                if answer.lowercased() == correctAnswer.lowercased() {
-                    result = "Correct!"
-                } else {
-                    result = "Try Again."
+        NavigationView {
+            VStack {
+                Text("Practice Pronunciation")
+                    .font(.title)
+                    .padding()
+                
+                List(pronunciationExercises) { word in
+                    Button(action: {
+                        selectedWord = word
+                    }) {
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text(word.kirati)
+                                    .font(.headline)
+                                Text(word.english)
+                                    .font(.subheadline)
+                                    .foregroundColor(.gray)
+                            }
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                AudioManager.shared.playAudio(named: word.audioFileName)
+                            }) {
+                                Image(systemName: "speaker.wave.2.fill")
+                                    .foregroundColor(.blue)
+                                    .padding(8)
+                                    .background(Color.blue.opacity(0.1))
+                                    .cornerRadius(8)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+                
+                if let word = selectedWord {
+                    VStack(spacing: 20) {
+                        Text("Practice: \(word.kirati)")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        Text("Listen to the correct pronunciation:")
+                            .font(.subheadline)
+                        
+                        Button(action: {
+                            AudioManager.shared.playAudio(named: word.audioFileName)
+                        }) {
+                            Image(systemName: "play.circle.fill")
+                                .resizable()
+                                .frame(width: 60, height: 60)
+                                .foregroundColor(.blue)
+                        }
+                        .padding()
+                        
+                        Button(action: {
+                            isRecording.toggle()
+                            
+                            // Simulate recording process
+                            if isRecording {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                    isRecording = false
+                                    showingFeedback = true
+                                }
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: isRecording ? "stop.fill" : "mic.fill")
+                                Text(isRecording ? "Stop Recording" : "Record Your Voice")
+                            }
+                            .padding()
+                            .background(isRecording ? Color.red : Color.green)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                        }
+                    }
+                    .padding()
+                    .background(Color.gray.opacity(0.1))
+                    .cornerRadius(10)
+                    .padding()
+                    .alert("Pronunciation Feedback", isPresented: $showingFeedback) {
+                        Button("OK", role: .cancel) { }
+                    } message: {
+                        Text("Good attempt! Try to emphasize the second syllable more.")
+                    }
                 }
             }
-            .padding()
-            
-            Text(result)
-                .foregroundColor(result == "Correct!" ? .green : .red)
-                .font(.headline)
+            .navigationTitle("Pronunciation")
         }
     }
 }
 
-// Daily Word & Streak System
+// New Alphabet Practice View
+struct AlphabetView: View {
+    let alphabets = [
+        ("क", "ka"),
+        ("ख", "kha"),
+        ("ग", "ga"),
+        ("घ", "gha"),
+        ("ङ", "nga")
+    ]
+    
+    @State private var currentLetter = 0
+    @State private var drawingInput = ""
+    
+    var body: some View {
+        NavigationView {
+            VStack {
+                TabView(selection: $currentLetter) {
+                    ForEach(0..<alphabets.count, id: \.self) { index in
+                        VStack(spacing: 30) {
+                            Text(alphabets[index].0)
+                                .font(.system(size: 120))
+                                .fontWeight(.bold)
+                            
+                            Text("Pronounced as: \(alphabets[index].1)")
+                                .font(.title3)
+                            
+                            Button(action: {
+                                AudioManager.shared.playAudio(named: alphabets[index].1)
+                            }) {
+                                Label("Listen", systemImage: "speaker.wave.2.fill")
+                                    .padding()
+                                    .background(Color.blue)
+                                    .foregroundColor(.white)
+                                    .cornerRadius(10)
+                            }
+                            
+                            Text("Practice writing below:")
+                                .padding(.top)
+                            
+                            ZStack {
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.1))
+                                    .frame(height: 200)
+                                    .cornerRadius(10)
+                                
+                                if drawingInput.isEmpty {
+                                    Text("Draw here with your finger")
+                                        .foregroundColor(.gray)
+                                }
+                            }
+                            .gesture(
+                                DragGesture()
+                                    .onChanged { _ in
+                                        drawingInput = "Drawing in progress..."
+                                    }
+                            )
+                            
+                            Button("Clear") {
+                                drawingInput = ""
+                            }
+                            .padding(.top)
+                        }
+                        .padding()
+                        .tag(index)
+                    }
+                }
+                .tabViewStyle(PageTabViewStyle())
+                .indexViewStyle(PageIndexViewStyle(backgroundDisplayMode: .always))
+            }
+            .navigationTitle("Alphabet Practice")
+        }
+    }
+}
+
+// Enhanced Quiz View
+struct QuizView: View {
+    @State private var currentQuizType = 0
+    @State private var answer = ""
+    @State private var result = ""
+    @State private var score = 0
+    @State private var questionIndex = 0
+    
+    let quizTypes = ["Multiple Choice", "Fill in the Blank", "Matching"]
+    
+    let multipleChoiceQuestions = [
+        (question: "What is 'Hello' in Kirati?", 
+         options: ["Namaste", "Dhanyabad", "Sewa", "Khim"],
+         correctAnswer: "Namaste"),
+        (question: "What does 'Sewa' mean?", 
+         options: ["Hello", "Goodbye", "Respect", "Food"],
+         correctAnswer: "Respect")
+    ]
+    
+    let fillBlankQuestions = [
+        (question: "The Kirati word for 'Thank you' is _______.", 
+         correctAnswer: "Dhanyabad"),
+        (question: "_______ is the Kirati word for House.", 
+         correctAnswer: "Khim")
+    ]
+    
+    var body: some View {
+        NavigationView {
+            VStack {
+                Picker("Quiz Type", selection: $currentQuizType) {
+                    ForEach(0..<quizTypes.count, id: \.self) { index in
+                        Text(quizTypes[index]).tag(index)
+                    }
+                }
+                .pickerStyle(SegmentedPickerStyle())
+                .padding()
+                
+                if currentQuizType == 0 {
+                    // Multiple Choice Quiz
+                    VStack(spacing: 20) {
+                        Text(multipleChoiceQuestions[questionIndex].question)
+                            .font(.title2)
+                            .multilineTextAlignment(.center)
+                            .padding()
+                        
+                        ForEach(multipleChoiceQuestions[questionIndex].options, id: \.self) { option in
+                            Button(action: {
+                                checkMultipleChoiceAnswer(selected: option)
+                            }) {
+                                Text(option)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.blue.opacity(0.1))
+                                    .cornerRadius(10)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                    }
+                } else if currentQuizType == 1 {
+                    // Fill in the Blank Quiz
+                    VStack(spacing: 20) {
+                        Text(fillBlankQuestions[questionIndex].question)
+                            .font(.title2)
+                            .multilineTextAlignment(.center)
+                            .padding()
+                        
+                        TextField("Your answer", text: $answer)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .padding(.horizontal)
+                        
+                        Button("Submit") {
+                            checkFillBlankAnswer()
+                        }
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                    }
+                } else {
+                    // Matching Quiz (Placeholder)
+                    Text("Matching quiz coming soon!")
+                        .font(.title2)
+                        .padding()
+                }
+                
+                if !result.isEmpty {
+                    Text(result)
+                        .foregroundColor(result.contains("Correct") ? .green : .red)
+                        .font(.headline)
+                        .padding()
+                }
+                
+                Text("Score: \(score)")
+                    .font(.headline)
+                    .padding()
+            }
+            .navigationTitle("Quiz")
+        }
+    }
+    
+    func checkMultipleChoiceAnswer(selected: String) {
+        if selected == multipleChoiceQuestions[questionIndex].correctAnswer {
+            result = "Correct!"
+            score += 1
+        } else {
+            result = "Incorrect. The answer is \(multipleChoiceQuestions[questionIndex].correctAnswer)."
+        }
+        
+        // Move to next question after delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            nextQuestion()
+        }
+    }
+    
+    func checkFillBlankAnswer() {
+        if answer.lowercased() == fillBlankQuestions[questionIndex].correctAnswer.lowercased() {
+            result = "Correct!"
+            score += 1
+        } else {
+            result = "Incorrect. The answer is \(fillBlankQuestions[questionIndex].correctAnswer)."
+        }
+        
+        // Move to next question after delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            answer = ""
+            nextQuestion()
+        }
+    }
+    
+    func nextQuestion() {
+        if currentQuizType == 0 {
+            questionIndex = (questionIndex + 1) % multipleChoiceQuestions.count
+        } else {
+            questionIndex = (questionIndex + 1) % fillBlankQuestions.count
+        }
+        result = ""
+    }
+}
+
+// Enhanced Daily Word View with Streak System
 struct DailyWordView: View {
-    let dailyWord = "Sewa" // Example
+    @State private var streakCount = UserDefaults.standard.integer(forKey: "streakCount")
+    @State private var lastVisitDate = UserDefaults.standard.object(forKey: "lastVisitDate") as? Date ?? Date().addingTimeInterval(-86400)
+    
+    let dailyWord = "Sewa"
     let meaning = "Respect"
+    let example = "Show sewa to your elders and teachers"
+    let funFact = "The concept of 'Sewa' is central to Kirati culture, representing both respect and service."
     
     var body: some View {
-        VStack {
-            Text("Word of the Day")
-                .font(.largeTitle)
+        NavigationView {
+            VStack(spacing: 20) {
+                HStack {
+                    VStack(alignment: .leading) {
+                        Text("Current Streak")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                        Text("\(streakCount) days")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                    }
+                    
+                    Spacer()
+                    
+                    Image(systemName: "flame.fill")
+                        .resizable()
+                        .frame(width: 30, height: 40)
+                        .foregroundColor(.orange)
+                }
                 .padding()
-            
-            Text(dailyWord)
-                .font(.title)
-                .fontWeight(.bold)
+                .background(Color.orange.opacity(0.1))
+                .cornerRadius(10)
+                
+                VStack(spacing: 15) {
+                    Text("Word of the Day")
+                        .font(.headline)
+                        .foregroundColor(.gray)
+                    
+                    Text(dailyWord)
+                        .font(.system(size: 42))
+                        .fontWeight(.bold)
+                    
+                    Button(action: {
+                        AudioManager.shared.playAudio(named: "sewa")
+                    }) {
+                        Image(systemName: "speaker.wave.2.fill")
+                            .padding(8)
+                            .background(Circle().fill(Color.blue.opacity(0.1)))
+                    }
+                    
+                    Text(meaning)
+                        .font(.title2)
+                        .padding(.top, 5)
+                    
+                    Text("Example: \(example)")
+                        .font(.body)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 5)
+                    
+                    Text("Did you know?")
+                        .font(.headline)
+                        .padding(.top, 20)
+                    
+                    Text(funFact)
+                        .font(.body)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                        .foregroundColor(.secondary)
+                }
                 .padding()
-            
-            Text(meaning)
-                .font(.title2)
-                .foregroundColor(.gray)
-                .padding()
+                
+                // Mark as learned button
+                Button(action: {
+                    updateStreak()
+                }) {
+                    Text("Mark as Learned")
+                        .fontWeight(.semibold)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                }
+                .padding(.horizontal)
+                .padding(.top, 20)
+                
+                Spacer()
+            }
+            .padding()
+            .navigationTitle("Daily Word")
+            .onAppear {
+                checkAndUpdateStreak()
+            }
+        }
+    }
+    
+    func checkAndUpdateStreak() {
+        let calendar = Calendar.current
+        if !calendar.isDateInToday(lastVisitDate) {
+            // Check if the last visit was yesterday
+            if calendar.isDate(lastVisitDate, inSameDayAs: calendar.date(byAdding: .day, value: -1, to: Date())!) {
+                // Streak continues
+            } else {
+                // Streak broken
+                streakCount = 0
+                UserDefaults.standard.set(streakCount, forKey: "streakCount")
+            }
+        }
+    }
+    
+    func updateStreak() {
+        let today = Date()
+        let calendar = Calendar.current
+        
+        // Only update streak if not already updated today
+        if !calendar.isDateInToday(lastVisitDate) {
+            streakCount += 1
+            UserDefaults.standard.set(streakCount, forKey: "streakCount")
+            UserDefaults.standard.set(today, forKey: "lastVisitDate")
+            lastVisitDate = today
         }
     }
 }
 
-// Storytelling Section
+// Enhanced Story View
 struct StoryView: View {
-    let story = "Long ago, the Kirat people settled in the beautiful hills of Nepal..."
+    let stories = [
+        (title: "Origin of the Kirat People", 
+         content: "Long ago, the Kirat people settled in the beautiful hills of Nepal. They were known for their bravery and deep connection to nature. The ancient texts speak of their arrival from the Himalayan mountains, bringing with them unique traditions and a rich language...",
+         image: "kirat_origin"),
+        
+        (title: "The Sacred Mountain", 
+         content: "In Kirati tradition, mountains are sacred entities. One story tells of a mountain that protected the Kirat people during a great storm. Since then, the mountain has been worshipped as a deity, with annual ceremonies held to honor its protective spirit...",
+         image: "sacred_mountain")
+    ]
+    
+    @State private var selectedStory = 0
     
     var body: some View {
-        ScrollView {
-            Text(story)
+        NavigationView {
+            VStack {
+                Picker("Select Story", selection: $selectedStory) {
+                    ForEach(0..<stories.count, id: \.self) { index in
+                        Text(stories[index].title).tag(index)
+                    }
+                }
+                .pickerStyle(MenuPickerStyle())
                 .padding()
+                
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 20) {
+                        Text(stories[selectedStory].title)
+                            .font(.title)
+                            .fontWeight(.bold)
+                            .padding(.bottom, 5)
+                        
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(height: 200)
+                            .cornerRadius(10)
+                            .overlay(
+                                Text("Illustration: \(stories[selectedStory].image)")
+                                    .foregroundColor(.white)
+                            )
+                        
+                        Button(action: {
+                            AudioManager.shared.playAudio(named: "story_narration")
+                        }) {
+                            Label("Listen to Narration", systemImage: "play.circle.fill")
+                                .padding()
+                                .background(Color.blue.opacity(0.1))
+                                .cornerRadius(10)
+                        }
+                        
+                        Text(stories[selectedStory].content)
+                            .lineSpacing(8)
+                            .padding(.top, 10)
+                        
+                        Divider()
+                            .padding(.vertical)
+                        
+                        Text("Key Vocabulary")
+                            .font(.headline)
+                        
+                        ForEach(["Kirat": "The ethnic group", "Pahad": "Hill or mountain", "Sakela": "Traditional dance"], id: \.key) { word, meaning in
+                            HStack {
+                                Text(word)
+                                    .fontWeight(.semibold)
+                                Spacer()
+                                Text(meaning)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.vertical, 5)
+                        }
+                    }
+                    .padding()
+                }
+            }
+            .navigationTitle("Cultural Stories")
         }
-        .navigationTitle("Stories")
     }
 }
 
